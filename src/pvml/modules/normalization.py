@@ -53,25 +53,8 @@ class LayerNorm(nn.Module):
 
 
 if __name__ == "__main__":
-    t.set_printoptions(precision=2, sci_mode=False)
-
-    # 1. GPT-2 sized — too wide to read, so watch the shapes.
-    #    d_model is the width of the residual stream: the vector representing
-    #    one token at one position. x is 2 sequences x 10 positions x 768.
+    # d_model is the width of the residual stream: the vector representing
+    # one token at one position. x is 2 sequences x 10 positions x 768.
     cfg = Config()
     x = t.randn(2, 10, cfg.d_model)
     LayerNorm(cfg)(x)  # debug=True prints the shape trace
-
-    # 2. Small enough to read — watch the numbers instead.
-    #    The (1, 2, 1) mean is subtracted from all 4 components of its
-    #    position, and both rows land identically: scale is divided out.
-    cfg_small = Config(d_model=4, debug=False)
-    x_small = t.tensor([[[1.0, 2.0, 3.0, 4.0],
-                         [10.0, 20.0, 30.0, 40.0]]])
-    mean = x_small.mean(dim=-1, keepdim=True)
-    out_small = LayerNorm(cfg_small)(x_small).detach()
-
-    print()
-    print(f"x     {tuple(x_small.shape)}\n{x_small}")
-    print(f"mean  {tuple(mean.shape)}\n{mean}")
-    print(f"out   {tuple(out_small.shape)}\n{out_small}")
