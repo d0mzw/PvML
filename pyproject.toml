@@ -1,0 +1,27 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "pvml"
+version = "0.1.0"
+description = "Exploration of AI/ML internals, interpretability, and safety"
+requires-python = ">=3.11"
+
+# NOTE: install the ROCm build of torch FIRST (see README quickstart).
+# torch is listed unpinned so pip treats an already-installed ROCm wheel as
+# satisfied rather than pulling a CPU/CUDA build from PyPI.
+dependencies = [
+    "torch",
+    "einops",
+    "jaxtyping",
+    "datasets",
+    "transformers",
+    "transformer_lens",
+    "wandb",
+    "tqdm",
+    "numpy",
+]
+
+[tool.setuptools.packages.find]
+where = ["src"]
