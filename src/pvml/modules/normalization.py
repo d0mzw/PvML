@@ -14,7 +14,8 @@ class LayerNorm(nn.Module):
 
     def forward(self, residual: Float[Tensor, "batch posn d_model"]) -> Float[Tensor, "batch posn d_model"]:
         if self.cfg.debug:
-            print(f"LayerNorm in: {tuple(residual.shape)}")
+            name = type(self).__name__
+            print(f"{name + ' in:':>13} {tuple(residual.shape)}")
 
         # keepdim=True leaves the reduced axis as a size-1 slot so it broadcasts
         # back against the original. Broadcasting aligns from the RIGHT:
@@ -39,7 +40,7 @@ class LayerNorm(nn.Module):
         # so every position gets standardised by its own mean and std.
         residual = (residual - residual_mean) / residual_std
         if self.cfg.debug:
-            print(f"  normalised: {tuple(residual.shape)}   <- (batch, posn, d_model) - (batch, posn, 1)")
+            print(f"  normalised: {str(tuple(residual.shape)):<16}# (batch, posn, d_model) - (batch, posn, 1)")
 
         # w and b are 1-D (768,). Broadcasting pads missing LEADING axes with
         # 1s, then stretches them:
@@ -47,7 +48,7 @@ class LayerNorm(nn.Module):
         # so the same learned scale and shift is applied at every position.
         out = residual * self.w + self.b
         if self.cfg.debug:
-            print(f"        w, b: {tuple(self.w.shape)}   <- padded to (1, 1, d_model), then stretched to (batch, posn, d_model)")
+            print(f"        w, b: {str(tuple(self.w.shape)):<16}# padded to (1, 1, d_model), stretched to out")
             print(f"         out: {tuple(out.shape)}")
         return out
 
