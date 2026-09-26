@@ -1,6 +1,6 @@
 # LayerNorm
 
-`src/pvml/modules/normalization.py` — ported from ARENA 1.1, `exercise.py:153-165`.
+`src/pvml/modules/normalization.py` — ported from ARENA 1.1 *Transformer from Scratch*.
 
 ## What it does
 

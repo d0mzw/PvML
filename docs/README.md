@@ -15,7 +15,7 @@ Listed in porting order, which is also the order they run in a forward pass.
 | `Config` | `pvml/config.py` | — |
 | `LayerNorm` | `pvml/modules/normalization.py` | [normalization.md](modules/normalization.md) |
 | `Embed`, `PosEmbed` | `pvml/modules/embedding.py` | [embedding.md](modules/embedding.md) |
-| `Attention` | `pvml/modules/attention.py` | _in progress_ |
+| `Attention` | `pvml/modules/attention.py` | [attention.md](modules/attention.md) — mask only |
 | `MLP` | `pvml/modules/mlp.py` | _not started_ |
 | `TransformerBlock` | `pvml/modules/block.py` | _not started_ |
 | `Transformer`, `Unembed` | `pvml/models/transformer.py` | _not started_ |

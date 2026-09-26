@@ -1,6 +1,6 @@
 # Embed and PosEmbed
 
-`src/pvml/modules/embedding.py` — ported from ARENA 1.1, `exercise.py:168-198`.
+`src/pvml/modules/embedding.py` — ported from ARENA 1.1 *Transformer from Scratch*.
 
 These are the two layers that turn integers into vectors. Their outputs are
 summed to form the initial residual stream:

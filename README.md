@@ -25,6 +25,7 @@ which breaks the package-relative imports:
 python -m pvml.config
 python -m pvml.modules.normalization
 python -m pvml.modules.embedding
+python -m pvml.modules.attention
 ```
 
 `pvml.modules.embedding` loads real GPT-2 weights through
