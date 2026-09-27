@@ -5,12 +5,14 @@ from jaxtyping import Float, Int
 from torch import Tensor
 
 from pvml.config import Config
+from pvml.debug import trace
 
 
 class Embed(nn.Module):
     def __init__(self, cfg: Config):
         super().__init__()
         self.cfg = cfg
+        self.tag = "embed"
         self.W_E = nn.Parameter(t.empty((cfg.d_vocab, cfg.d_model)))
         nn.init.normal_(self.W_E, std=self.cfg.init_range)
 
@@ -20,11 +22,9 @@ class Embed(nn.Module):
         #     (d_vocab, d_model)[(batch, posn)] -> (batch, posn, d_model)
         out = self.W_E[tokens]
 
-        if self.cfg.debug:
-            name = type(self).__name__
-            print(f"{name + ' in:':>13} {str(tuple(tokens.shape)):<16}# token ids, not activations")
-            print(f"         W_E: {str(tuple(self.W_E.shape)):<16}# one row per vocab entry")
-            print(f"         out: {tuple(out.shape)}")
+        trace(self, "in", tokens, "# token ids, not activations")
+        trace(self, "W_E", self.W_E, "# one row per vocab entry")
+        trace(self, "out", out)
 
         return out
 
@@ -33,6 +33,7 @@ class PosEmbed(nn.Module):
     def __init__(self, cfg: Config):
         super().__init__()
         self.cfg = cfg
+        self.tag = "pos_embed"
         self.W_pos = nn.Parameter(t.empty((cfg.n_ctx, cfg.d_model)))
         nn.init.normal_(self.W_pos, std=self.cfg.init_range)
 
@@ -44,12 +45,10 @@ class PosEmbed(nn.Module):
         sliced = self.W_pos[:seq_len]
         out = einops.repeat(sliced, "seq d_model -> batch seq d_model", batch=batch)
 
-        if self.cfg.debug:
-            name = type(self).__name__
-            print(f"{name + ' in:':>13} {str(tuple(tokens.shape)):<16}# values ignored, only the shape is read")
-            print(f"       W_pos: {str(tuple(self.W_pos.shape)):<16}# one row per position, up to n_ctx")
-            print(f"      sliced: {str(tuple(sliced.shape)):<16}# W_pos[:seq_len]")
-            print(f"         out: {str(tuple(out.shape)):<16}# same table repeated for each sequence")
+        trace(self, "in", tokens, "# values ignored, only the shape is read")
+        trace(self, "W_pos", self.W_pos, "# one row per position, up to n_ctx")
+        trace(self, "sliced", sliced, "# W_pos[:seq_len]")
+        trace(self, "out", out, "# same table repeated for each sequence")
 
         return out
 
