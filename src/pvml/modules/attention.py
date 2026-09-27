@@ -5,6 +5,7 @@ from jaxtyping import Float
 from torch import Tensor
 
 from pvml.config import Config
+from pvml.debug import trace
 
 
 class Attention(nn.Module):
@@ -13,6 +14,7 @@ class Attention(nn.Module):
     def __init__(self, cfg: Config):
         super().__init__()
         self.cfg = cfg
+        self.tag = "attn"
 
         # One projection per head, stacked on a leading n_heads axis: all 12
         # heads run as a single batched matmul rather than 12 separate modules.
@@ -81,12 +83,16 @@ class Attention(nn.Module):
             + self.b_V
         )
 
-        if self.cfg.debug:
-            name = type(self).__name__
-            print(f"{name + ' in:':>13} {str(tuple(normalized_resid_pre.shape)):<16}# (batch, posn, d_model)")
-            print(f"       W_QKV: {str(tuple(self.W_Q.shape)):<16}# (n_heads, d_model, d_head)")
-            print(f"       b_QKV: {str(tuple(self.b_Q.shape)):<16}# (n_heads, d_head), broadcast over posn")
-            print(f"     q, k, v: {str(tuple(q.shape)):<16}# (batch, posn, n_heads, d_head)")
+        trace(self, "normalized_resid_pre", normalized_resid_pre, "# (batch, posn, d_model)")
+        trace(self, "W_Q", self.W_Q, "# (n_heads, d_model, d_head)")
+        trace(self, "b_Q", self.b_Q, "# (n_heads, d_head), broadcast over posn")
+        trace(self, "q", q, "# (batch, posn, n_heads, d_head)")
+        trace(self, "W_K", self.W_K)
+        trace(self, "b_K", self.b_K)
+        trace(self, "k", k)
+        trace(self, "W_V", self.W_V)
+        trace(self, "b_V", self.b_V)
+        trace(self, "v", v)
 
         # batch and nheads appear in both inputs AND the output, so they are
         # batched over, not summed: an independent (posn_Q, posn_K) grid per
@@ -105,10 +111,38 @@ class Attention(nn.Module):
         attn_scores_masked = self.apply_causal_mask(attn_scores / self.cfg.d_head**0.5)
         attn_pattern = attn_scores_masked.softmax(-1)
 
-        if self.cfg.debug:
-            print(f"     pattern: {str(tuple(attn_pattern.shape)):<16}# rows sum to 1 over visible keys")
+        trace(self, "attn_pattern", attn_pattern, "# rows sum to 1 over visible keys")
 
-        return attn_pattern
+        # posn_K is contracted, so this sums over KEY positions: each query
+        # position takes a weighted average of every value vector it can see.
+        # This is the only step where information crosses between positions.
+        #     (1, 7, 12, 64) x (1, 12, 7, 7) -> (1, 7, 12, 64)
+        z = einops.einsum(
+            v,
+            attn_pattern,
+            "batch posn_K nheads d_head, batch nheads posn_Q posn_K -> batch posn_Q nheads d_head",
+        )
+
+        trace(self, "z", z, "# weighted average of v, per query position")
+
+        # Two names contracted at once: nheads and d_head both vanish, so each
+        # head's 64 dims are projected up to d_model and the 12 results are
+        # SUMMED, not concatenated. Equivalently, glue (nheads d_head) into one
+        # axis of 768 and it is a single (posn, 768) @ (768, d_model) matmul.
+        # That additivity is why one head's contribution can be isolated.
+        attn_out = (
+            einops.einsum(
+                z,
+                self.W_O,
+                "batch posn_Q nheads d_head, nheads d_head d_model -> batch posn_Q d_model",
+            )
+            + self.b_O
+        )
+
+        trace(self, "W_O", self.W_O, "# (n_heads, d_head, d_model), projects back up")
+        trace(self, "attn_out", attn_out, "# back to the residual stream's width")
+
+        return attn_out
 
     def apply_causal_mask(
         self,
@@ -134,35 +168,60 @@ class Attention(nn.Module):
         # on position, identically for every sequence and every head.
         mask = t.triu(all_ones, diagonal=1).bool()
 
-        if self.cfg.debug:
-            print(f"      scores: {str(tuple(attn_scores.shape)):<16}# (batch, n_heads, query_pos, key_pos)")
-            print(f"    triangle: {str(tuple(mask.shape)):<16}# True above the diagonal = cannot attend")
+        trace(self, "attn_scores", attn_scores, "# (batch, n_heads, query_pos, key_pos)")
+        trace(self, "mask", mask, "# True above the diagonal = cannot attend")
 
         attn_scores.masked_fill_(mask, self.IGNORE)
         return attn_scores
 
 
 if __name__ == "__main__":
+    # transformer_lens is only needed for this check, so import it here rather
+    # than at module level.
+    from pvml.models.loading import load_reference_gpt2
+
     cfg = Config()
     attn = Attention(cfg)
 
     for name, param in attn.named_parameters():
         print(f"{name:>4}: {tuple(param.shape)}")
-    total = sum(p.numel() for p in attn.parameters())
-    print(f"total: {total:,} parameters\n")
+    print(f"total: {sum(p.numel() for p in attn.parameters()):,} parameters\n")
 
-    # A residual stream for 1 sequence of 7 positions, as ln1 would hand over.
-    resid = t.randn(1, 7, cfg.d_model)
-    attn(resid)
+    ref = load_reference_gpt2()
+    device = next(ref.parameters()).device
+    text = "The cat sat on the mat"
+    tokens = ref.to_tokens(text)
+    _, cache = ref.run_with_cache(tokens)
 
-    print()
+    # The real input to block 0's attention: the residual stream after ln1.
+    # Run the layer rather than reading ln1.hook_normalized, which fires
+    # BEFORE ln1 applies its w and b.
+    resid = ref.blocks[0].ln1(cache["blocks.0.hook_resid_pre"])
 
-    # 1 sequence, 1 head, 4 positions — small enough to see the triangle.
-    scores = t.randn(1, 1, 4, 4)
-    masked = attn.apply_causal_mask(scores)
+    attn = Attention(cfg).to(device)
+    # strict=False: transformer_lens carries an extra `mask` buffer that we
+    # build on the fly instead.
+    attn.load_state_dict(ref.blocks[0].attn.state_dict(), strict=False)
 
-    print("\nmasked scores (query_pos down, key_pos across):")
-    print(masked[0, 0])
+    attn_out = attn(resid)
 
-    print("\nafter softmax — each row is a probability distribution:")
-    print(masked[0, 0].softmax(dim=-1))
+    # Head 0's pattern, on real weights. The zeros above the diagonal are the
+    # causal mask; each row sums to 1 across the positions it can see.
+    # forward already traced itself, and this recomputes part of it, so quieten
+    # the trace rather than print the same shapes twice.
+    cfg.debug = False
+    pattern = attn.apply_causal_mask(
+        einops.einsum(
+            einops.einsum(resid, attn.W_Q, "b p m, h m d -> b p h d") + attn.b_Q,
+            einops.einsum(resid, attn.W_K, "b p m, h m d -> b p h d") + attn.b_K,
+            "b q h d, b k h d -> b h q k",
+        )
+        / cfg.d_head**0.5
+    ).softmax(-1)[0, 0]
+
+    labels = [s.replace("<|endoftext|>", "<BOS>") for s in ref.to_str_tokens(text)]
+    print("\nhead 0 attention pattern")
+    print(f"{'query / key':>14}" + "".join(f"{l:>8}" for l in labels))
+    for i, label in enumerate(labels):
+        row = "".join(f"{pattern[i][j]:>8.2f}" for j in range(len(labels)))
+        print(f"{label:>14}{row}")
