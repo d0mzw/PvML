@@ -4,7 +4,7 @@ from dataclasses import dataclass
 @dataclass
 class Config:
     d_model: int = 768
-    debug: bool = True
+    debug: bool = False  # per-module __main__ turns it on
     layer_norm_eps: float = 1e-5
     d_vocab: int = 50257
     init_range: float = 0.02

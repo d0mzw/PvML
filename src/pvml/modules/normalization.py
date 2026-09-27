@@ -44,7 +44,7 @@ class LayerNorm(nn.Module):
         #     (2, 10, 768) * (768,) -> (1, 1, 768) -> (2, 10, 768)
         # so the same learned scale and shift is applied at every position.
         out = residual * self.w + self.b
-        trace(self, "w, b", self.w, "# padded to (1, 1, d_model), stretched to out")
+        trace(self, "w, b", self.w, "# padded to (1, 1, d_model), stretched to out", once=True)
         trace(self, "out", out, "# * w + b")
         return out
 
@@ -52,6 +52,6 @@ class LayerNorm(nn.Module):
 if __name__ == "__main__":
     # d_model is the width of the residual stream: the vector representing
     # one token at one position. x is 2 sequences x 10 positions x 768.
-    cfg = Config()
+    cfg = Config(debug=True)
     x = t.randn(2, 10, cfg.d_model)
     LayerNorm(cfg)(x)  # debug=True prints the shape trace

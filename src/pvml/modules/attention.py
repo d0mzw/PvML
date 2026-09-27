@@ -84,14 +84,14 @@ class Attention(nn.Module):
         )
 
         trace(self, "normalized_resid_pre", normalized_resid_pre, "# (batch, posn, d_model)")
-        trace(self, "W_Q", self.W_Q, "# (n_heads, d_model, d_head)")
-        trace(self, "b_Q", self.b_Q, "# (n_heads, d_head), broadcast over posn")
+        trace(self, "W_Q", self.W_Q, "# (n_heads, d_model, d_head)", once=True)
+        trace(self, "b_Q", self.b_Q, "# (n_heads, d_head), broadcast over posn", once=True)
         trace(self, "q", q, "# (batch, posn, n_heads, d_head)")
-        trace(self, "W_K", self.W_K)
-        trace(self, "b_K", self.b_K)
+        trace(self, "W_K", self.W_K, once=True)
+        trace(self, "b_K", self.b_K, once=True)
         trace(self, "k", k)
-        trace(self, "W_V", self.W_V)
-        trace(self, "b_V", self.b_V)
+        trace(self, "W_V", self.W_V, once=True)
+        trace(self, "b_V", self.b_V, once=True)
         trace(self, "v", v)
 
         # batch and nheads appear in both inputs AND the output, so they are
@@ -139,7 +139,7 @@ class Attention(nn.Module):
             + self.b_O
         )
 
-        trace(self, "W_O", self.W_O, "# (n_heads, d_head, d_model), projects back up")
+        trace(self, "W_O", self.W_O, "# (n_heads, d_head, d_model), projects back up", once=True)
         trace(self, "attn_out", attn_out, "# back to the residual stream's width")
 
         return attn_out
@@ -180,7 +180,7 @@ if __name__ == "__main__":
     # than at module level.
     from pvml.models.loading import load_reference_gpt2
 
-    cfg = Config()
+    cfg = Config(debug=True)
     attn = Attention(cfg)
 
     for name, param in attn.named_parameters():

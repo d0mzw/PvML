@@ -9,17 +9,31 @@ __init__; a parent overwrites it with the child's position in the tree, so the
 same class prints [attn] when run alone and [b3.attn] inside a transformer.
 """
 
+_SEEN = set()
+
 TAG_WIDTH = 12
 LABEL_WIDTH = 20
 SHAPE_WIDTH = 16
 
 
-def trace(module, label, value, note=""):
-    """Print one shape line, if the module's config has debug on."""
+def trace(module, label, value, note="", once=False):
+    """Print one shape line, if the module's config has debug on.
+
+    once=True prints a given (class, label) pair the first time only. Use it
+    for weights, whose shapes never change: in a 12-block model they would
+    otherwise repeat twelve times per forward pass.
+    """
     if not getattr(module.cfg, "debug", False):
         return
 
     tag = getattr(module, "tag", None) or type(module).__name__.lower()
+    if once:
+        # keyed on the CLASS, not the tag: every block's W_Q has the same
+        # shape, so printing it once covers all twelve
+        key = (type(module).__name__, label)
+        if key in _SEEN:
+            return
+        _SEEN.add(key)
     shape = tuple(value.shape) if hasattr(value, "shape") else value
 
     line = (f"{f'[{tag}]':<{TAG_WIDTH}}"

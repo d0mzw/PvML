@@ -15,10 +15,23 @@ Listed in porting order, which is also the order they run in a forward pass.
 | `Config` | `pvml/config.py` | — |
 | `LayerNorm` | `pvml/modules/normalization.py` | [normalization.md](modules/normalization.md) |
 | `Embed`, `PosEmbed` | `pvml/modules/embedding.py` | [embedding.md](modules/embedding.md) |
-| `Attention` | `pvml/modules/attention.py` | [attention.md](modules/attention.md) — mask only |
+| `Attention` | `pvml/modules/attention.py` | [attention.md](modules/attention.md) |
 | `MLP` | `pvml/modules/mlp.py` | _not started_ |
 | `TransformerBlock` | `pvml/modules/block.py` | _not started_ |
 | `Transformer`, `Unembed` | `pvml/models/transformer.py` | _not started_ |
+
+## Debug tracing
+
+Every module prints its shapes through `pvml.debug.trace`, gated on
+`Config.debug` (off by default; each module's `__main__` turns it on).
+
+```
+[b0.attn]                      q: (1, 7, 12, 64)  # (batch, posn, n_heads, d_head)
+```
+
+`tag_tree(model)` stamps each submodule with its position, so a full trace can
+be filtered with `grep 'b3.attn'`. Weight shapes pass `once=True` and print for
+the first instance of a class only.
 
 ## Reference
 

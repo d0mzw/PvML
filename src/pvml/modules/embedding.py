@@ -23,7 +23,7 @@ class Embed(nn.Module):
         out = self.W_E[tokens]
 
         trace(self, "in", tokens, "# token ids, not activations")
-        trace(self, "W_E", self.W_E, "# one row per vocab entry")
+        trace(self, "W_E", self.W_E, "# one row per vocab entry", once=True)
         trace(self, "out", out)
 
         return out
@@ -46,7 +46,7 @@ class PosEmbed(nn.Module):
         out = einops.repeat(sliced, "seq d_model -> batch seq d_model", batch=batch)
 
         trace(self, "in", tokens, "# values ignored, only the shape is read")
-        trace(self, "W_pos", self.W_pos, "# one row per position, up to n_ctx")
+        trace(self, "W_pos", self.W_pos, "# one row per position, up to n_ctx", once=True)
         trace(self, "sliced", sliced, "# W_pos[:seq_len]")
         trace(self, "out", out, "# same table repeated for each sequence")
 
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     print(f"{ref.to_str_tokens(text)=}")
     print(f"{tokens.shape=}\n")
 
-    cfg = Config()
+    cfg = Config(debug=True)
 
     # to_tokens puts the tokens on the reference model's device, so put ours
     # there too rather than assuming CPU.
