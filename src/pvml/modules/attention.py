@@ -178,7 +178,7 @@ class Attention(nn.Module):
 if __name__ == "__main__":
     # transformer_lens is only needed for this check, so import it here rather
     # than at module level.
-    from pvml.models.loading import load_reference_gpt2
+    from pvml.loading import load_reference_gpt2
 
     cfg = Config(debug=True)
     attn = Attention(cfg)

@@ -54,7 +54,7 @@ class TransformerBlock(nn.Module):
 
 
 if __name__ == "__main__":
-    from pvml.models.loading import load_reference_gpt2
+    from pvml.loading import load_reference_gpt2
 
     cfg = Config(debug=True)
     block = TransformerBlock(cfg)
