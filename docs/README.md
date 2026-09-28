@@ -16,9 +16,10 @@ Listed in porting order, which is also the order they run in a forward pass.
 | `LayerNorm` | `pvml/modules/normalization.py` | [normalization.md](modules/normalization.md) |
 | `Embed`, `PosEmbed` | `pvml/modules/embedding.py` | [embedding.md](modules/embedding.md) |
 | `Attention` | `pvml/modules/attention.py` | [attention.md](modules/attention.md) |
-| `MLP` | `pvml/modules/mlp.py` | _not started_ |
-| `TransformerBlock` | `pvml/modules/block.py` | _not started_ |
-| `Transformer`, `Unembed` | `pvml/models/transformer.py` | _not started_ |
+| `MLP` | `pvml/modules/mlp.py` | [mlp.md](modules/mlp.md) |
+| `TransformerBlock` | `pvml/modules/block.py` | [block.md](modules/block.md) |
+| `Unembed` | `pvml/modules/unembedding.py` | [unembedding.md](modules/unembedding.md) |
+| `Transformer` | `pvml/modules/transformer.py` | _not started_ |
 
 ## Debug tracing
 
@@ -33,9 +34,20 @@ Every module prints its shapes through `pvml.debug.trace`, gated on
 be filtered with `grep 'b3.attn'`. Weight shapes pass `once=True` and print for
 the first instance of a class only.
 
+## Layout
+
+Everything that is an `nn.Module` lives in `pvml/modules/`. `config.py`,
+`debug.py` and `loading.py` sit at the package root, since none of them is a
+layer.
+
 ## Reference
 
-`pvml/models/loading.py` is the only place `transformer_lens` is imported. It
+`pvml/loading.py` is the only place `transformer_lens` is imported. It
 loads GPT-2 small with `fold_ln`, `center_unembed` and `center_writing_weights`
 all set to `False` — they default to `True` and algebraically rearrange the
 weights, so leaving them on means nothing we load will match.
+
+**A hook is not a module boundary.** `ln1.hook_normalized` fires on `x / scale`,
+*before* the layer applies its `w` and `b`, so it is not what attention
+receives. Feed modules `ref.blocks[0].ln1(resid_pre)` instead. The same applies
+to `ln2` and `ln_final`.

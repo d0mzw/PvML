@@ -26,10 +26,13 @@ python -m pvml.config
 python -m pvml.modules.normalization
 python -m pvml.modules.embedding
 python -m pvml.modules.attention
+python -m pvml.modules.mlp
+python -m pvml.modules.block
+python -m pvml.modules.unembedding
 ```
 
-`pvml.modules.embedding` loads real GPT-2 weights through
-`pvml.models.loading`, so the first run downloads ~500MB from the HuggingFace
+Each one loads real GPT-2 weights through `pvml.loading` and checks its output
+against the reference, so the first run downloads ~500MB from the HuggingFace
 Hub into `~/.cache/huggingface`.
 
 Each module is documented in [`docs/modules/`](docs/modules/) — what the layer
