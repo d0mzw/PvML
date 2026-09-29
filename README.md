@@ -31,7 +31,7 @@ python -m pvml.modules.block
 python -m pvml.modules.unembedding
 ```
 
-Each one loads real GPT-2 weights through `pvml.loading` and checks its output
+Each one loads real GPT-2 weights through `pvml.reference.gpt2` and checks its output
 against the reference, so the first run downloads ~500MB from the HuggingFace
 Hub into `~/.cache/huggingface`.
 

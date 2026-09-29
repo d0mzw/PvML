@@ -32,7 +32,7 @@ def get_log_probs(
 
 if __name__ == "__main__":
     from pvml.config import Config
-    from pvml.loading import load_reference_gpt2
+    from pvml.reference.gpt2 import load_reference_gpt2
     from pvml.modules.transformer import Transformer
 
     ref = load_reference_gpt2()

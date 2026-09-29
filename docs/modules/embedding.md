@@ -74,7 +74,7 @@ reversible.
 
 ## Loading GPT-2 weights
 
-`__main__` loads real weights through `pvml.loading.load_reference_gpt2`
+`__main__` loads real weights through `pvml.reference.gpt2.load_reference_gpt2`
 and runs the layers on a tokenized sentence. `load_state_dict` accepts them
 because the parameter names match TransformerLens's (`W_E`, `W_pos`) — a
 reason to keep ARENA's naming verbatim.

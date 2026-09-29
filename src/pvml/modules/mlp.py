@@ -74,7 +74,7 @@ class MLP(nn.Module):
 
 
 if __name__ == "__main__":
-    from pvml.loading import load_reference_gpt2
+    from pvml.reference.gpt2 import load_reference_gpt2
 
     cfg = Config(debug=True)
     mlp = MLP(cfg)

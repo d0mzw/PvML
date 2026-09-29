@@ -36,13 +36,14 @@ the first instance of a class only.
 
 ## Layout
 
-Everything that is an `nn.Module` lives in `pvml/modules/`. `config.py`,
-`debug.py` and `loading.py` sit at the package root, since none of them is a
-layer.
+Everything that is an `nn.Module` lives in `pvml/modules/`. `config.py` and
+`debug.py` sit at the package root, since neither is a layer. `pvml/reference/`
+holds the loaders for other people's implementations, which is where the
+`transformer_lens` dependency is quarantined.
 
 ## Reference
 
-`pvml/loading.py` is the only place `transformer_lens` is imported. It
+`pvml/reference/` is the only place `transformer_lens` is imported. It
 loads GPT-2 small with `fold_ln`, `center_unembed` and `center_writing_weights`
 all set to `False` — they default to `True` and algebraically rearrange the
 weights, so leaving them on means nothing we load will match.

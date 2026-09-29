@@ -56,7 +56,7 @@ class PosEmbed(nn.Module):
 if __name__ == "__main__":
     # transformer_lens is only needed for this check, so import it here rather
     # than at module level — importing pvml.modules.embedding stays cheap.
-    from pvml.loading import load_reference_gpt2
+    from pvml.reference.gpt2 import load_reference_gpt2
 
     ref = load_reference_gpt2()
     text = "The cat sat on the mat"
