@@ -19,7 +19,18 @@ Listed in porting order, which is also the order they run in a forward pass.
 | `MLP` | `pvml/modules/mlp.py` | [mlp.md](modules/mlp.md) |
 | `TransformerBlock` | `pvml/modules/block.py` | [block.md](modules/block.md) |
 | `Unembed` | `pvml/modules/unembedding.py` | [unembedding.md](modules/unembedding.md) |
-| `Transformer` | `pvml/modules/transformer.py` | _not started_ |
+| `Transformer` | `pvml/modules/transformer.py` | [transformer.md](modules/transformer.md) |
+
+## Training
+
+| part | file | docs |
+|------|------|------|
+| loss | `pvml/training/losses.py` | [training.md](training.md) |
+| run knobs | `pvml/training/args.py` | [training.md](training.md) |
+| the loop | `pvml/training/trainer.py` | [training.md](training.md) |
+| data | `pvml/data/tinystories.py` | [training.md](training.md) |
+| device | `pvml/device.py` | [training.md](training.md) |
+| experiment files | `experiments/` | [experiments.md](experiments.md) |
 
 ## Debug tracing
 

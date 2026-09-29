@@ -7,7 +7,6 @@ import torch as t
 from torch.utils.data import DataLoader
 from tqdm.auto import tqdm
 
-from pvml.config import Config
 from pvml.training.args import TrainingArgs
 from pvml.training.losses import get_log_probs
 
@@ -20,6 +19,7 @@ class Trainer:
         train_loader: DataLoader,
         test_loader: DataLoader,
         sample_fn=None,
+        extra: dict | None = None,
     ):
         """
         The loaders are arguments rather than globals, so this trains on any
@@ -39,13 +39,16 @@ class Trainer:
             model.parameters(), lr=args.lr, weight_decay=args.weight_decay
         )
         self.step = 0
+        self.started = None
 
-        name = args.run_name or time.strftime("%Y-%m-%d-%H%M%S")
-        self.run_dir = Path(args.run_dir) / name
+        self.run_dir = Path(args.run_dir) / args.name
         self.run_dir.mkdir(parents=True, exist_ok=True)
         self.metrics_path = self.run_dir / "metrics.jsonl"
         (self.run_dir / "config.json").write_text(
-            json.dumps({"args": asdict(args), "model": asdict(model.cfg)}, indent=2)
+            json.dumps(
+                {"args": asdict(args), "model": asdict(model.cfg), **(extra or {})},
+                indent=2,
+            )
         )
 
     def save(self, name: str = "model.pt") -> Path:
@@ -56,8 +59,9 @@ class Trainer:
 
     def log(self, **metrics) -> None:
         """One JSON object per line. Plain file, no account, nothing leaves the box."""
+        elapsed = None if self.started is None else round(time.perf_counter() - self.started, 2)
         with self.metrics_path.open("a") as f:
-            f.write(json.dumps({"step": self.step, **metrics}) + "\n")
+            f.write(json.dumps({"step": self.step, "elapsed": elapsed, **metrics}) + "\n")
 
     def training_step(self, batch) -> t.Tensor:
         """One gradient update. Returns the loss and logs nothing.
@@ -89,6 +93,7 @@ class Trainer:
         return correct / total
 
     def train(self) -> None:
+        self.started = time.perf_counter()
         accuracy = float("nan")
         progress = tqdm(total=self.args.max_steps_per_epoch * self.args.epochs)
 
@@ -115,19 +120,19 @@ class Trainer:
             self.save()
 
         progress.close()
-        print(f"\nmetrics: {self.metrics_path}")
+
+        seconds = time.perf_counter() - self.started
+        summary = {
+            "device": t.cuda.get_device_name(0) if self.device.type == "cuda" else str(self.device),
+            "steps": self.step,
+            "seconds": round(seconds, 1),
+            "steps_per_second": round(self.step / seconds, 2),
+            "parameters": sum(p.numel() for p in self.model.parameters()),
+            "final_accuracy": accuracy,
+        }
+        (self.run_dir / "summary.json").write_text(json.dumps(summary, indent=2))
+
+        print(f"\n{summary['steps']} steps in {seconds / 60:.1f} min "
+              f"({summary['steps_per_second']} steps/s)")
+        print(f"metrics: {self.metrics_path}")
         print(f"weights: {self.run_dir / 'model.pt'}")
-
-
-def small_config(d_vocab: int = 50257) -> Config:
-    """The config ARENA trains: 4 layers, 128 context. Fits on one GPU."""
-    return Config(
-        d_model=32,
-        n_heads=16,
-        d_head=2,
-        d_mlp=32 * 4,
-        n_layers=4,
-        n_ctx=128,
-        d_vocab=d_vocab,
-        debug=False,
-    )

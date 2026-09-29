@@ -1,0 +1,25 @@
+{
+  "args": {
+    "name": "tinystories-d256-l8-h8-ctx128-5k",
+    "batch_size": 32,
+    "epochs": 10,
+    "max_steps_per_epoch": 500,
+    "lr": 0.001,
+    "weight_decay": 0.01,
+    "seed": 0,
+    "run_dir": "runs",
+    "eval_prompt": "Once upon a time"
+  },
+  "model": {
+    "d_model": 256,
+    "debug": false,
+    "layer_norm_eps": 1e-05,
+    "d_vocab": 50257,
+    "init_range": 0.02,
+    "n_ctx": 128,
+    "d_head": 32,
+    "d_mlp": 1024,
+    "n_heads": 8,
+    "n_layers": 8
+  }
+}
