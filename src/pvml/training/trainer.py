@@ -48,6 +48,12 @@ class Trainer:
             json.dumps({"args": asdict(args), "model": asdict(model.cfg)}, indent=2)
         )
 
+    def save(self, name: str = "model.pt") -> Path:
+        """Weights only. The config sits beside them, so a run is self-contained."""
+        path = self.run_dir / name
+        t.save(self.model.state_dict(), path)
+        return path
+
     def log(self, **metrics) -> None:
         """One JSON object per line. Plain file, no account, nothing leaves the box."""
         with self.metrics_path.open("a") as f:
@@ -105,8 +111,12 @@ class Trainer:
                 self.log(sample=sample, epoch=epoch)
                 print(f"\nepoch {epoch + 1}: {sample!r}")
 
+            # overwritten each epoch, so an interrupted run still leaves weights
+            self.save()
+
         progress.close()
         print(f"\nmetrics: {self.metrics_path}")
+        print(f"weights: {self.run_dir / 'model.pt'}")
 
 
 def small_config(d_vocab: int = 50257) -> Config:
