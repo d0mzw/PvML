@@ -1,6 +1,6 @@
 # Attention
 
-`src/pvml/modules/attention.py` — ported from ARENA 1.1 *Transformer from Scratch*.
+`src/pvml/modules/attention.py`, ported from ARENA 1.1 *Transformer from Scratch*.
 
 Verified against GPT-2: loading `ref.blocks[0].attn.state_dict()` and feeding
 the real `ln1` output reproduces `blocks.0.hook_attn_out` exactly, along with
@@ -56,7 +56,7 @@ Three contractions, and each one is the operation's meaning:
 | step | contracts | what it does |
 |------|-----------|--------------|
 | `attn_scores` | `d_head` | compares every query to every key |
-| `z` | `posn_K` | mixes across positions — the only such step |
+| `z` | `posn_K` | mixes across positions, the only such step |
 | `attn_out` | `n_heads` and `d_head` | sums the heads into one residual update |
 
 `attn_scores` is the only tensor that grows as sequence length squared.

@@ -4,7 +4,7 @@ Notes on each piece of the transformer, written while porting it from the
 ARENA 1.1 *Transformer from Scratch* exercises into `src/pvml/`.
 
 Each page covers what the layer does, its parameter shapes, and the details
-that are easy to get wrong — the kind that still train if you get them wrong.
+that are easy to get wrong, the kind that still train if you get them wrong.
 
 ## Modules
 
@@ -12,7 +12,7 @@ Listed in porting order, which is also the order they run in a forward pass.
 
 | module | file | docs |
 |--------|------|------|
-| `Config` | `pvml/config.py` | — |
+| `Config` | `pvml/config.py` | none |
 | `LayerNorm` | `pvml/modules/normalization.py` | [normalization.md](modules/normalization.md) |
 | `Embed`, `PosEmbed` | `pvml/modules/embedding.py` | [embedding.md](modules/embedding.md) |
 | `Attention` | `pvml/modules/attention.py` | [attention.md](modules/attention.md) |
@@ -56,7 +56,7 @@ holds the loaders for other people's implementations, which is where the
 
 `pvml/reference/` is the only place `transformer_lens` is imported. It
 loads GPT-2 small with `fold_ln`, `center_unembed` and `center_writing_weights`
-all set to `False` — they default to `True` and algebraically rearrange the
+all set to `False`. They default to `True` and algebraically rearrange the
 weights, so leaving them on means nothing we load will match.
 
 **A hook is not a module boundary.** `ln1.hook_normalized` fires on `x / scale`,

@@ -1,13 +1,13 @@
 # LayerNorm
 
-`src/pvml/modules/normalization.py` — ported from ARENA 1.1 *Transformer from Scratch*.
+`src/pvml/modules/normalization.py`, ported from ARENA 1.1 *Transformer from Scratch*.
 
 ## What it does
 
 Standardises each position's residual-stream vector to mean 0 and standard
 deviation 1, then applies a learned scale and shift.
 
-The normalisation runs along `d_model` **only** — independently for every
+The normalisation runs along `d_model` **only**, independently for every
 `(batch, position)` pair. Position 3 of sequence 0 is normalised using its own
 768 numbers and nothing else. No statistics are shared across positions or
 across the batch, which is what distinguishes LayerNorm from BatchNorm and why
@@ -24,8 +24,8 @@ Initialised to the identity transform, so at step 0 the layer is pure
 standardisation and *learns* whether to deviate. Zeros for `w` would kill the
 signal; ones for `b` would inject a constant offset.
 
-Note `w` and `b` are shared across all positions — one scale and shift for the
-whole layer — while the mean and std are per-position. Normalise locally,
+Note `w` and `b` are shared across all positions, one scale and shift for the
+whole layer, while the mean and std are per-position. Normalise locally,
 transform globally.
 
 ## Forward
@@ -48,7 +48,7 @@ back. Broadcasting aligns shapes from the right:
 (1, 7, 768) - (1, 7)      ->  compares 768 vs 7    error
 ```
 
-The danger case is when the mismatched sizes happen to be compatible — if batch
+The danger case is when the mismatched sizes happen to be compatible. If batch
 size equalled `d_model`, the second form would broadcast silently against the
 wrong axis and produce plausible garbage with no error.
 
@@ -56,7 +56,7 @@ wrong axis and produce plausible garbage with no error.
 for *estimating* a population variance from a sample; here we have all 768
 numbers and want exactly these standardised. It is also what GPT-2 was trained
 with, so weight parity depends on it. At `d_model=768` the difference is a
-factor of about 1.00065 — small enough to train fine, large enough to fail a
+factor of about 1.00065, small enough to train fine and large enough to fail a
 parity check.
 
 **`layer_norm_eps` goes inside the sqrt**, added to the variance, not to the

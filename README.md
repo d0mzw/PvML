@@ -18,7 +18,7 @@ pip install -e .
 ## Usage
 
 Each module carries its own `__main__` block that runs the layer and prints a
-shape trace, gated on `Config.debug`. Run them with `-m` — not by file path,
+shape trace, gated on `Config.debug`. Run them with `-m`, not by file path,
 which breaks the package-relative imports:
 
 ```
@@ -35,7 +35,7 @@ Each one loads real GPT-2 weights through `pvml.reference.gpt2` and checks its o
 against the reference, so the first run downloads ~500MB from the HuggingFace
 Hub into `~/.cache/huggingface`.
 
-Each module is documented in [`docs/modules/`](docs/modules/) — what the layer
+Each module is documented in [`docs/modules/`](docs/modules/): what the layer
 does, its parameter shapes, and the details that are easy to get wrong.
 
 ## Models
@@ -64,7 +64,7 @@ python experiments/sample.py runs/tinystories-d128-l6-h4-ctx512-40k
 
 ### Example output
 
-`python -m pvml.modules.embedding` — GPT-2's own `W_E` and `W_pos` loaded into
+`python -m pvml.modules.embedding`, with GPT-2's own `W_E` and `W_pos` loaded into
 `Embed` and `PosEmbed`, run on a tokenized sentence:
 
 ```

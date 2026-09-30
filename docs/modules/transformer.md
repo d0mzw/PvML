@@ -1,6 +1,6 @@
 # Transformer
 
-`src/pvml/modules/transformer.py` — ported from ARENA 1.1 *Transformer from Scratch*.
+`src/pvml/modules/transformer.py`, ported from ARENA 1.1 *Transformer from Scratch*.
 
 The first check where nothing is borrowed. Every other module was handed its
 input by the reference; this one takes tokens and produces logits through its
@@ -12,7 +12,7 @@ same argmax everywhere: True
 missing keys: []
 ```
 
-`missing_keys: []` is the part that matters as much as the diff — every GPT-2
+`missing_keys: []` is the part that matters as much as the diff. Every GPT-2
 weight found a home, so nothing is silently untrained or misnamed. That is the
 check `strict=False` would otherwise hide.
 

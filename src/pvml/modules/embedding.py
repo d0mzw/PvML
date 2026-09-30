@@ -38,7 +38,7 @@ class PosEmbed(nn.Module):
         nn.init.normal_(self.W_pos, std=self.cfg.init_range)
 
     def forward(self, tokens: Int[Tensor, "batch position"]) -> Float[Tensor, "batch position d_model"]:
-        # Only the SHAPE of tokens is used — position embeddings don't care
+        # Only the SHAPE of tokens is used: position embeddings don't care
         # which token sits where. W_pos always has n_ctx rows, so slice to the
         # sequence length, then repeat the same table for every sequence.
         batch, seq_len = tokens.shape
@@ -55,7 +55,7 @@ class PosEmbed(nn.Module):
 
 if __name__ == "__main__":
     # transformer_lens is only needed for this check, so import it here rather
-    # than at module level — importing pvml.modules.embedding stays cheap.
+    # than at module level, so importing pvml.modules.embedding stays cheap.
     from pvml.reference.gpt2 import load_reference_gpt2
 
     ref = load_reference_gpt2()

@@ -1,6 +1,6 @@
 # TransformerBlock
 
-`src/pvml/modules/block.py` — ported from ARENA 1.1 *Transformer from Scratch*.
+`src/pvml/modules/block.py`, ported from ARENA 1.1 *Transformer from Scratch*.
 
 Matches GPT-2's `blocks.0.hook_resid_post` to `1.1e-05` on values reaching 120,
 which is float32 accumulation over four layers rather than an error. Every
@@ -21,9 +21,9 @@ separable, and it is why a single head's effect can be isolated.
 
 | name | class |
 |------|-------|
-| `ln1` | `LayerNorm` — normalises what attention reads |
+| `ln1` | `LayerNorm`, normalises what attention reads |
 | `attn` | `Attention` |
-| `ln2` | `LayerNorm` — normalises what the MLP reads |
+| `ln2` | `LayerNorm`, normalises what the MLP reads |
 | `mlp` | `MLP` |
 
 **7,087,872 parameters.** Twelve blocks plus the 38.6M embedding is roughly
@@ -39,8 +39,8 @@ attention *reads*; what gets added back is the unnormalised `attn_out`. So the
 stream itself never passes through a LayerNorm, and accumulates raw
 contributions across all twelve blocks.
 
-The wide shapes inside the sublayers — `(1, 7, 3072)` in the MLP,
-`(1, 7, 12, 64)` in attention — are private scratch space, projected back to
+The wide shapes inside the sublayers, `(1, 7, 3072)` in the MLP and
+`(1, 7, 12, 64)` in attention, are private scratch space, projected back to
 `d_model` before anything is added.
 
 ## Tagging

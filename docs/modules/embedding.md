@@ -1,6 +1,6 @@
 # Embed and PosEmbed
 
-`src/pvml/modules/embedding.py` — ported from ARENA 1.1 *Transformer from Scratch*.
+`src/pvml/modules/embedding.py`, ported from ARENA 1.1 *Transformer from Scratch*.
 
 These are the two layers that turn integers into vectors. Their outputs are
 summed to form the initial residual stream:
@@ -10,8 +10,8 @@ residual = Embed(tokens) + PosEmbed(tokens)
 ```
 
 Both take `Int[Tensor, "batch position"]` and return
-`Float[Tensor, "batch position d_model"]`. That type change — ints in, floats
-out — is the signature of an embedding layer.
+`Float[Tensor, "batch position d_model"]`. That type change, ints in and floats
+out, is the signature of an embedding layer.
 
 ## Embed
 
@@ -31,7 +31,7 @@ tensor gives 3-D:
 Each token id is replaced by its entire row, so the index shape is preserved
 and the row axis is appended.
 
-At 50257 x 768 that is 38.6M parameters — roughly 30% of GPT-2 small's total,
+At 50257 x 768 that is 38.6M parameters, roughly 30% of GPT-2 small's total,
 spent purely on mapping ids to vectors.
 
 ## PosEmbed
@@ -50,7 +50,7 @@ out = einops.repeat(sliced, "seq d_model -> batch seq d_model", batch=batch)
 ```
 
 `W_pos` always has `n_ctx` rows regardless of input length, so it is sliced to
-`seq_len` and then repeated across the batch — every sequence gets identical
+`seq_len` and then repeated across the batch, so every sequence gets identical
 position vectors, because position 3 means the same thing everywhere.
 
 `n_ctx = 1024` is a hard architectural ceiling, not a configuration
@@ -76,7 +76,7 @@ reversible.
 
 `__main__` loads real weights through `pvml.reference.gpt2.load_reference_gpt2`
 and runs the layers on a tokenized sentence. `load_state_dict` accepts them
-because the parameter names match TransformerLens's (`W_E`, `W_pos`) — a
+because the parameter names match TransformerLens's (`W_E`, `W_pos`), a
 reason to keep ARENA's naming verbatim.
 
 The reference model lands on GPU, so the modules are moved to match:

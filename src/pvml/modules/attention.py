@@ -46,7 +46,7 @@ class Attention(nn.Module):
     ) -> Float[Tensor, "batch posn d_model"]:
         """
         Attention over the residual stream. Expects input already normalised by
-        the block's ln1 — attention never normalises its own input.
+        the block's ln1. Attention never normalises its own input.
         """
 
         # d_model appears in both inputs but not the output, so it is summed
@@ -65,7 +65,7 @@ class Attention(nn.Module):
         )
 
         # Same operation, different learned matrices. All three read the SAME
-        # residual stream — three views of one vector.
+        # residual stream: three views of one vector.
         k = (
             einops.einsum(
                 normalized_resid_pre,
@@ -158,7 +158,7 @@ class Attention(nn.Module):
         all_ones = t.ones(attn_scores.size(-2), attn_scores.size(-1), device=attn_scores.device)
 
         # triu keeps the upper triangle. diagonal=1 starts one above the main
-        # diagonal, so the diagonal itself survives as False — a position may
+        # diagonal, so the diagonal itself survives as False: a position may
         # attend to itself, just not to anything after it:
         #     [[0, 1, 1, 1],      True  = key_pos > query_pos = the future
         #      [0, 0, 1, 1],      False = visible

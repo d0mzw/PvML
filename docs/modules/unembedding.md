@@ -1,6 +1,6 @@
 # Unembed
 
-`src/pvml/modules/unembedding.py` — ported from ARENA 1.1 *Transformer from Scratch*.
+`src/pvml/modules/unembedding.py`, ported from ARENA 1.1 *Transformer from Scratch*.
 
 Reproduces GPT-2's logits exactly.
 

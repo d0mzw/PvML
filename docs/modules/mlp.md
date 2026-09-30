@@ -1,6 +1,6 @@
 # MLP
 
-`src/pvml/modules/mlp.py` — ported from ARENA 1.1 *Transformer from Scratch*.
+`src/pvml/modules/mlp.py`, ported from ARENA 1.1 *Transformer from Scratch*.
 
 Reproduces GPT-2's `blocks.0.hook_mlp_out` exactly.
 
@@ -10,7 +10,7 @@ Expand the residual stream to four times its width, apply the only
 nonlinearity in the block, project back.
 
 Every position goes through the same two matrices independently. Nothing here
-mixes positions — that only happens in attention.
+mixes positions. That only happens in attention.
 
 ## Parameters
 
@@ -45,7 +45,7 @@ a single matrix multiply.
 `normalized_resid_mid` is the residual stream *after* attention has been added,
 through the block's `ln2`. Same relationship attention has with `ln1`.
 
-Don't feed it `cache["blocks.0.ln2.hook_normalized"]` — that hook fires before
+Don't feed it `cache["blocks.0.ln2.hook_normalized"]` , because that hook fires before
 `ln2` applies its `w` and `b`. Use `ref.blocks[0].ln2(resid_mid)`.
 
 ## Run
