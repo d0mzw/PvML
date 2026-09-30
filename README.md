@@ -38,6 +38,30 @@ Hub into `~/.cache/huggingface`.
 Each module is documented in [`docs/modules/`](docs/modules/) — what the layer
 does, its parameter shapes, and the details that are easy to get wrong.
 
+## Models
+
+The trained weights live on the HuggingFace Hub, one folder per run:
+
+**https://huggingface.co/d0mzw/pvml-tinystories**
+
+| Run | n_ctx | Steps | Loss | Accuracy |
+| --- | --- | --- | --- | --- |
+| [`tinystories-d128-l6-h4-ctx512-40k`](https://huggingface.co/d0mzw/pvml-tinystories/tree/main/tinystories-d128-l6-h4-ctx512-40k) | 512 | 40,000 | 1.732 | 0.573 |
+| [`tinystories-d128-l6-h4-ctx128-20k`](https://huggingface.co/d0mzw/pvml-tinystories/tree/main/tinystories-d128-l6-h4-ctx128-20k) | 128 | 20,000 | 2.080 | 0.517 |
+| [`tinystories-d128-l6-h4-ctx128-5k`](https://huggingface.co/d0mzw/pvml-tinystories/tree/main/tinystories-d128-l6-h4-ctx128-5k) | 128 | 5,000 | 2.369 | 0.476 |
+| [`tinystories-d256-l8-h8-ctx128-5k`](https://huggingface.co/d0mzw/pvml-tinystories/tree/main/tinystories-d256-l8-h8-ctx128-5k) | 128 | 5,000 | 2.497 | 0.461 |
+| [`tinystories-d32-l4-h16-ctx128-20k`](https://huggingface.co/d0mzw/pvml-tinystories/tree/main/tinystories-d32-l4-h16-ctx128-20k) | 128 | 20,000 | 2.782 | 0.421 |
+| [`tinystories-d32-l4-h16-ctx128-5k`](https://huggingface.co/d0mzw/pvml-tinystories/tree/main/tinystories-d32-l4-h16-ctx128-5k) | 128 | 5,000 | 2.996 | 0.395 |
+
+Each folder holds `model.safetensors`, the `config.json` it was trained with,
+and a `summary.json`. Weights are kept out of this repo by `.gitignore`; the
+metrics and configs are tracked here under `runs/`.
+
+```
+hf download d0mzw/pvml-tinystories --include 'tinystories-d128-l6-h4-ctx512-40k/*' --local-dir runs
+python experiments/sample.py runs/tinystories-d128-l6-h4-ctx512-40k
+```
+
 ### Example output
 
 `python -m pvml.modules.embedding` — GPT-2's own `W_E` and `W_pos` loaded into

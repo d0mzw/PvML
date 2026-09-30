@@ -18,6 +18,7 @@ dependencies = [
     "datasets",
     "transformers",
     "transformer_lens",
+    "safetensors",
     "wandb",
     "tqdm",
     "numpy",

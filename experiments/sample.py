@@ -30,13 +30,24 @@ from pvml.device import get_device
 from pvml.modules.transformer import Transformer
 
 
+def load_weights(run_dir: Path) -> dict:
+    """Prefer safetensors, which is what the Hub serves, and fall back to the
+    model.pt the trainer writes locally."""
+    safe = run_dir / "model.safetensors"
+    if safe.exists():
+        from safetensors.torch import load_file
+
+        return load_file(safe, device=str(get_device()))
+    return t.load(run_dir / "model.pt", map_location=get_device())
+
+
 def load_run(run_dir: Path):
     """Rebuild the model a run directory describes, weights included."""
     saved = json.loads((run_dir / "config.json").read_text())
     cfg = Config(**saved["model"])
 
     model = Transformer(cfg).to(get_device())
-    model.load_state_dict(t.load(run_dir / "model.pt", map_location=get_device()))
+    model.load_state_dict(load_weights(run_dir))
     model.eval()
     return cfg, model
 
