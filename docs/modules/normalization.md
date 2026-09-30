@@ -44,8 +44,8 @@ out         (batch, posn, d_model)
 back. Broadcasting aligns shapes from the right:
 
 ```
-(2, 10, 768) - (2, 10, 1)   ->  1 stretches to 768   ok
-(2, 10, 768) - (2, 10)      ->  compares 768 vs 10   error
+(1, 7, 768) - (1, 7, 1)   ->  1 stretches to 768   ok
+(1, 7, 768) - (1, 7)      ->  compares 768 vs 7    error
 ```
 
 The danger case is when the mismatched sizes happen to be compatible — if batch
@@ -72,10 +72,10 @@ python -m pvml.modules.normalization
 ```
 
 ```
-LayerNorm in: (2, 10, 768)
-        mean: (2, 10, 1)
-         std: (2, 10, 1)
-  normalised: (2, 10, 768)    # (batch, posn, d_model) - (batch, posn, 1)
+LayerNorm in: (1, 7, 768)
+        mean: (1, 7, 1)
+         std: (1, 7, 1)
+  normalised: (1, 7, 768)    # (batch, posn, d_model) - (batch, posn, 1)
         w, b: (768,)          # padded to (1, 1, d_model), stretched to out
-         out: (2, 10, 768)
+         out: (1, 7, 768)
 ```
