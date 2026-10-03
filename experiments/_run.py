@@ -13,29 +13,22 @@ from pvml.training.trainer import Trainer
 
 
 def make_sampler(cfg):
-    """Generate from our own weights, using transformer_lens for the loop.
+    """Generate from our own weights with our own loop.
 
-    Our parameter names match theirs, so the weights load straight across and
-    the logits come out identical. Sampling properly is its own exercise; this
-    borrows a tested loop so the samples say something about the model.
+    Rebuilt once per run and reused every epoch. The Sampler holds no state of
+    its own beyond the model and tokenizer, so the same one works as the
+    weights change underneath it.
     """
-    from transformer_lens import HookedTransformer, HookedTransformerConfig
+    from transformers import GPT2TokenizerFast
 
-    hooked = HookedTransformer(
-        HookedTransformerConfig(
-            d_model=cfg.d_model, n_heads=cfg.n_heads, d_head=cfg.d_head,
-            d_mlp=cfg.d_mlp, n_layers=cfg.n_layers, n_ctx=cfg.n_ctx,
-            d_vocab=cfg.d_vocab, act_fn="gelu_new", normalization_type="LN",
-            tokenizer_name="gpt2",
-        )
-    )
+    from pvml.sampling.args import SamplingArgs
+    from pvml.sampling.sampler import Sampler
+
+    tokenizer = GPT2TokenizerFast.from_pretrained("gpt2")
+    args = SamplingArgs(max_new_tokens=50, temperature=0.7, top_p=0.95)
 
     def sample(model, prompt: str) -> str:
-        hooked.load_state_dict(model.state_dict(), strict=False)
-        hooked.eval()
-        return hooked.generate(
-            prompt, max_new_tokens=50, temperature=0.7, top_p=0.95, verbose=False
-        )
+        return Sampler(model, tokenizer).sample(prompt, args)
 
     return sample
 
