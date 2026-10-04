@@ -80,9 +80,10 @@ class Sampler:
 
         try:
             for _ in range(args.max_new_tokens):
-                # The slice is the context window. Once the sequence outgrows
-                # n_ctx the model cannot see the start of it, and W_pos has no
-                # row to give those positions anyway.
+                # None makes the batch axis the model wants. The slice is there
+                # in case the input tokens run past n_ctx, which they will since
+                # the sequence grows every step. [0, -1] drops the batch again
+                # and keeps the last position, the only one generation needs.
                 logits = self.model(input_ids[None, -self.cfg.n_ctx :])[0, -1]
 
                 next_id = self.next_token(input_ids, logits, args)
