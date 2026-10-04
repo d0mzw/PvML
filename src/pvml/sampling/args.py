@@ -19,13 +19,22 @@ class SamplingArgs:
     seed: int | None = None  # set for reproducible draws
 
     def __post_init__(self) -> None:
-        assert self.max_new_tokens > 0, "max_new_tokens must be positive"
-        assert self.temperature >= 0, "temperature must be non-negative"
-        assert self.top_k >= 0, "top_k must be non-negative"
-        assert 0 <= self.top_p <= 1.0, "top_p must be a probability"
+        # raise, not assert: python -O strips asserts, and these are a guarantee
+        # the sampler relies on rather than a development-time check.
+        if self.max_new_tokens <= 0:
+            raise ValueError(f"max_new_tokens must be positive, got {self.max_new_tokens}")
+        if self.temperature < 0:
+            raise ValueError(f"temperature must be non-negative, got {self.temperature}")
+        if self.top_k < 0:
+            raise ValueError(f"top_k must be non-negative, got {self.top_k}")
+        if not 0 <= self.top_p <= 1.0:
+            raise ValueError(f"top_p must be a probability in [0, 1], got {self.top_p}")
         # They are alternatives, not a pair. Allowing both would silently apply
         # whichever the dispatcher happens to check first.
-        assert not (self.top_k and self.top_p), "set at most one of top_k and top_p"
+        if self.top_k and self.top_p:
+            raise ValueError(
+                f"set at most one of top_k and top_p, got top_k={self.top_k} top_p={self.top_p}"
+            )
 
     def describe(self) -> str:
         if self.temperature == 0:
@@ -39,3 +48,31 @@ class SamplingArgs:
             parts.append(f"freq_penalty {self.frequency_penalty}")
         parts.append(f"{self.max_new_tokens} tokens")
         return ", ".join(parts)
+
+
+if __name__ == "__main__":
+    print(f"defaults: {SamplingArgs().describe()}\n")
+
+    # Every condition in __post_init__, each one checked.
+    cases = [
+        ("max_new_tokens <= 0", dict(max_new_tokens=0)),
+        ("temperature < 0", dict(temperature=-0.5)),
+        ("top_k < 0", dict(top_k=-1)),
+        ("top_p outside [0, 1]", dict(top_p=1.5)),
+        ("top_k and top_p together", dict(top_k=40, top_p=0.95)),
+    ]
+    for label, kwargs in cases:
+        try:
+            SamplingArgs(**kwargs)
+            print(f"  FAIL  {label:<26} accepted {kwargs}")
+        except ValueError as e:
+            print(f"  ok    {label:<26} {e}")
+
+    # The valid edges must still be accepted.
+    for label, kwargs in [
+        ("temperature 0 (greedy)", dict(temperature=0.0)),
+        ("top_p 1.0", dict(top_p=1.0)),
+        ("top_k only", dict(top_k=40)),
+    ]:
+        SamplingArgs(**kwargs)
+        print(f"  ok    {label:<26} accepted")
