@@ -80,11 +80,16 @@ class Sampler:
 
         try:
             for _ in range(args.max_new_tokens):
-                # None makes the batch axis the model wants. The slice is there
-                # in case the input tokens run past n_ctx, which they will since
-                # the sequence grows every step. [0, -1] drops the batch again
-                # and keeps the last position, the only one generation needs.
-                logits = self.model(input_ids[None, -self.cfg.n_ctx :])[0, -1]
+                # BOS has to stay at position 0. Slicing the whole sequence drops
+                # it once the sequence outgrows n_ctx, and the model has never
+                # seen anything else there.
+                if self.prepend_bos:
+                    window = t.cat([input_ids[:1], input_ids[1:][-(self.cfg.n_ctx - 1) :]])
+                else:
+                    window = input_ids[-self.cfg.n_ctx :]
+                # None makes the batch axis the model wants. [0, -1] drops it
+                # again and keeps the last position, the only one generation needs.
+                logits = self.model(window[None])[0, -1]
 
                 next_id = self.next_token(input_ids, logits, args)
                 input_ids = t.cat(
@@ -138,3 +143,13 @@ if __name__ == "__main__":
     ]:
         print(f"\n  {args.describe()}")
         print(f"  {sampler.sample(prompt, args)!r}")
+
+    # Generating past n_ctx must not drop BOS from position 0.
+    small = Config(d_model=32, n_heads=4, d_head=8, d_mlp=64, n_layers=2, n_ctx=8)
+    tiny = Sampler(Transformer(small).eval(), ref.tokenizer)
+    seen, fwd = [], tiny.model.forward
+    tiny.model.forward = lambda x, *a, **k: (seen.append(int(x[0, 0])), fwd(x, *a, **k))[1]
+    tiny.sample("Once upon a time", SamplingArgs(max_new_tokens=10, temperature=0.0))
+    tiny.model.forward = fwd
+    held = all(x == ref.tokenizer.bos_token_id for x in seen)
+    print(f"\nBOS held at position 0 past n_ctx: {held}  ({len(seen)} forwards at n_ctx=8)")
